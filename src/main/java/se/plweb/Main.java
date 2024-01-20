@@ -9,8 +9,9 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
 
         final int numberOfThreads = 100;
-        final int maxRows = 9900000;
+        final int maxRows = 10000000;
         final int maxRowsPerThread = maxRows / numberOfThreads;
+        final int executeBatchEveryRowNumber = 10000;
 
         System.out.println("numberOfThreads:" + numberOfThreads);
         System.out.println("maxRowsPerThread:" + maxRowsPerThread);
@@ -20,7 +21,9 @@ public class Main {
 
         IntStream
                 .range(0, numberOfThreads)
-                .forEach((i) -> callableCollection.add(DbCallable.create(maxRowsPerThread, i)));
+                .forEach((i) -> callableCollection.add(
+                        DbCallable.create(maxRowsPerThread, i, executeBatchEveryRowNumber))
+                );
 
         ExecutorService executorService = Executors.newFixedThreadPool(callableCollection.size());
         executorService

@@ -10,17 +10,19 @@ public class DbCallable implements Callable<Integer> {
 
     final DBPopulate dbPopulate;
     private final int numberOfRowsToBeInserted;
+    private final int executeBatchEveryRowNumber;
 
     private final Faker faker = new Faker();
     private final int threadNumber;
 
-    public static DbCallable create(int numberOfRowsToBeInserted, int threadNumber) {
-        return new DbCallable(numberOfRowsToBeInserted, threadNumber);
+    public static DbCallable create(int numberOfRowsToBeInserted, int threadNumber, int executeBatchEveryRowNumber) {
+        return new DbCallable(numberOfRowsToBeInserted, threadNumber, executeBatchEveryRowNumber);
     }
 
-    private DbCallable(int numberOfRowsToBeInserted, int threadNumber) {
+    private DbCallable(int numberOfRowsToBeInserted, int threadNumber, int executeBatchEveryRowNumber) {
         this.numberOfRowsToBeInserted = numberOfRowsToBeInserted;
         this.threadNumber = threadNumber;
+        this.executeBatchEveryRowNumber = executeBatchEveryRowNumber;
         dbPopulate = new DBPopulate();
     }
 
@@ -31,10 +33,12 @@ public class DbCallable implements Callable<Integer> {
             if (dbPopulate.addDataData(faker.name().fullName(), faker.number().numberBetween(0, 100))) {
                 count.getAndIncrement();
             }
-            if (i % 100 == 0) {
+            if (i % executeBatchEveryRowNumber == 0) {
+                dbPopulate.executeBatch();
                 System.out.println(threadNumber + " -> " + i);
             }
         });
+        dbPopulate.executeBatch();
 
         return count.get();
     }
